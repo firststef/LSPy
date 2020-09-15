@@ -1,7 +1,7 @@
 # LSPy
 
 Minimal python LSP-RPC implementation in a single file based on the [JSON-RPC 2.0 specs](http://www.jsonrpc.org/specification).
-This repo is ripped from riga/jsonrpyc.
+This repo is ripped from [riga/jsonrpyc](https://github.com/riga/jsonrpyc).
 
 ## Usage
 
