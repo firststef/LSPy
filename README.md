@@ -1,7 +1,21 @@
 # LSPy
 
 Minimal python LSP-RPC implementation in a single file based on the [JSON-RPC 2.0 specs](http://www.jsonrpc.org/specification).
-This repo is ripped from [riga/lspy](https://github.com/riga/lspy).
+This repo is ripped from [riga/lspy](https://github.com/riga/lspy). Note that this was more of a test for me, the same protocol I added here for LSP in c++ takes milliseconds to respond but in python it takes a few seconds so - not good. This is because python is very slow at reading one character at a time from stdin (for the header part, the body is read by reading the size from the header).
+
+I only needed to add a header on top of json-rpc:
+```
+Content-Length: ...\r\n
+\r\n
+{
+	"jsonrpc": "2.0",
+	"id": 1,
+	"method": "textDocument/didOpen",
+	"params": {
+		...
+	}
+}
+```
 
 ## Usage
 
@@ -32,7 +46,7 @@ rpc = lspy.RPC(stdout=p.stdin, stdin=p.stdout)
 # sync usage
 #
 
-print(rpc("greet", None, "John")) # none is for no callback
+print(rpc("greet", "John"))
 # => "Hi, John!"
 
 
@@ -45,7 +59,7 @@ def cb(err, res=None):
         raise err
     print("callback got: " + res)
 
-rpc("greet", cb, "John")
+rpc("greet", callback=cb, "John")
 
 # cb is called asynchronously which prints
 # => "callback got: Hi, John!"
@@ -53,8 +67,8 @@ rpc("greet", cb, "John")
 
 According to LSP Specifications, you can either pass parameters for the methods as a list or as an object:
 ```python
-rpc("greet", cb, "John")
-rpc("greet", cb, name="John")
+rpc("greet", callback=cb, "John")
+rpc("greet", callback=cb, name="John")
 ```
 
 ## Installation
