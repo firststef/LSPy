@@ -1,7 +1,7 @@
 # LSPy
 
 Minimal python LSP-RPC implementation in a single file based on the [JSON-RPC 2.0 specs](http://www.jsonrpc.org/specification).
-This repo is ripped from [riga/jsonrpyc](https://github.com/riga/jsonrpyc).
+This repo is ripped from [riga/lspy](https://github.com/riga/lspy).
 
 ## Usage
 
@@ -32,7 +32,7 @@ rpc = lspy.RPC(stdout=p.stdin, stdin=p.stdout)
 # sync usage
 #
 
-print(rpc("greet", args=("John",), block=0.1))
+print(rpc("greet", None, "John")) # none is for no callback
 # => "Hi, John!"
 
 
@@ -45,12 +45,17 @@ def cb(err, res=None):
         raise err
     print("callback got: " + res)
 
-rpc("greet", args=("John",), callback=cb)
+rpc("greet", cb, "John")
 
 # cb is called asynchronously which prints
 # => "callback got: Hi, John!"
 ```
 
+According to LSP Specifications, you can either pass parameters for the methods as a list or as an object:
+```python
+rpc("greet", cb, "John")
+rpc("greet", cb, name="John")
+```
 
 ## Installation
 

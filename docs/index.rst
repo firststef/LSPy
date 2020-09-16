@@ -1,14 +1,14 @@
-jsonrpyc
+lspy
 ========
 
-.. centered:: This page contains only API docs. For more info, visit `jsonrpyc on GitHub <https://github.com/riga/jsonrpyc>`_.
+.. centered:: This page contains only API docs. For more info, visit `lspy on GitHub <https://github.com/firststef/lspy>`_.
 
 
 .. toctree::
    :maxdepth: 2
 
 
-.. automodule:: jsonrpyc
+.. automodule:: lspy
 
 ``RPC``
 -------

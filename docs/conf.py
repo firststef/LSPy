@@ -7,14 +7,14 @@ import shlex
 
 
 sys.path.insert(0, os.path.abspath(".."))
-import jsonrpyc
+import lspy
 
 
-project = "jsonrpyc"
-author = jsonrpyc.__author__
-copyright = jsonrpyc.__copyright__
-version = jsonrpyc.__version__
-release = jsonrpyc.__version__
+project = "lspy"
+author = lspy.__author__
+copyright = lspy.__copyright__
+version = lspy.__version__
+release = lspy.__version__
 
 
 templates_path = ["_templates"]
@@ -33,8 +33,8 @@ html_sidebars = {"**": [
     "searchbox.html"]
 }
 html_theme_options = {
-    "github_user": "riga",
-    "github_repo": "jsonrpyc",
+    "github_user": "firststef",
+    "github_repo": "lspy",
     "travis_button": True
 }
 

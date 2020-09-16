@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 
-import os
 import unittest
+import os
 from subprocess import Popen, PIPE
-import jsonrpyc
+
+import lspy
 
 
 __all__ = ["RPCTestCase"]
@@ -18,26 +19,26 @@ class RPCTestCase(unittest.TestCase):
         cwd = os.path.dirname(os.path.abspath(__file__))
         self.p = Popen(["python", "server/simple.py"], stdin=PIPE, stdout=PIPE, cwd=cwd)
 
-        self.rpc = jsonrpyc.RPC(stdout=self.p.stdin, stdin=self.p.stdout)
+        self.rpc = lspy.RPC(stdout=self.p.stdin, stdin=self.p.stdout, block=0.1)
 
     def __del__(self):
         self.p.terminate()
 
     def test_request_wo_args(self):
-        def cb(err, one):
+        def cb(err, result):
             self.assertEqual(err, None)
-            self.assertEqual(one, 1)
+            self.assertEqual(result, 1)
         self.rpc("one", callback=cb)
 
-        self.assertEqual(self.rpc("one", block=0.1), 1)
+        self.assertEqual(self.rpc("one"), 1)
 
     def test_request_w_args(self):
-        def cb(err, twice):
+        def cb(err, result):
             self.assertEqual(err, None)
-            self.assertEqual(twice, 84)
-        self.rpc("twice", args=(42,), callback=cb)
+            self.assertEqual(result, 84)
+        self.rpc("twice", 42, callback=cb)
 
-        self.assertEqual(self.rpc("twice", args=(42,), block=0.1), 84)
+        self.assertEqual(self.rpc("twice", name=42), 84)
 
     def test_request_arguments(self):
         args = (1, None, True)
@@ -45,20 +46,23 @@ class RPCTestCase(unittest.TestCase):
 
         def cb(err, n):
             self.assertEqual(err, None)
-            self.assertEqual(n, 5)
-        self.rpc("arglen", args=args, kwargs=kwargs, callback=cb)
+            self.assertEqual(n, 3)
+        self.rpc("arglen", callback=cb, *args)
 
-        self.assertEqual(self.rpc("arglen", args=args, kwargs=kwargs, block=0.1), 5)
+        self.assertEqual(self.rpc("arglen", **kwargs), 2)
 
     def test_request_error(self):
         def cb(err, *args):
-            self.assertIsInstance(err, jsonrpyc.RPCInternalError)
-        self.rpc("one", args=(27,), callback=cb)
+            self.assertIsInstance(err, lspy.RPCInternalError)
+        try:
+            self.rpc("one", 27, callback=cb)
+        except Exception as e:
+            pass
 
         err = None
         try:
-            self.rpc("one", args=(27,), block=0.1)
+            self.rpc("one", 27)
         except Exception as e:
             err = e
         finally:
-            self.assertIsInstance(err, jsonrpyc.RPCInternalError)
+            self.assertIsInstance(err, lspy.RPCInternalError)

@@ -12,14 +12,14 @@ class MyClass(object):
     def one(self):
         return 1
 
-    def twice(self, n):
-        return n * 2
+    def twice(self, name):
+        return name * 2
 
     def arglen(self, *args, **kwargs):
         return len(args) + len(kwargs)
 
 
 if __name__ == "__main__":
-    import jsonrpyc
+    import lspy
 
-    rpc = jsonrpyc.RPC(MyClass())
+    rpc = lspy.RPC(MyClass())
