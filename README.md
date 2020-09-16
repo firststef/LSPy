@@ -1,7 +1,7 @@
 # LSPy
 
 Minimal python LSP-RPC implementation in a single file based on the [JSON-RPC 2.0 specs](http://www.jsonrpc.org/specification).
-This repo is ripped from [riga/lspy](https://github.com/riga/lspy). Note that this was more of a test for me, the same protocol I added here for LSP in c++ takes milliseconds to respond but in python it takes a few seconds so - not good. This is because python is very slow at reading one character at a time from stdin (for the header part, the body is read by reading the size from the header).
+This repo is ripped from [riga/jsonrpyc](https://github.com/riga/lspy). Note that this was more of a test for me, the same protocol I added here for LSP in c++ takes milliseconds to respond but in python it takes a few seconds so - not good. This is because python is very slow at reading one character at a time from stdin (for the header part, the body is read by reading the size from the header).
 
 I only needed to add a header on top of json-rpc:
 ```
