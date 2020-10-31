@@ -220,7 +220,7 @@ class RPC(object):
 
     EMPTY_RESULT = object()
 
-    def __init__(self, target=None, stdin=None, stdout=None, block = 0.1, **kwargs):
+    def __init__(self, target=None, stdin=None, stdout=None, block=0.1, initialize=True, **kwargs):
         super(RPC, self).__init__()
 
         self.target = target
@@ -229,8 +229,12 @@ class RPC(object):
         stdin = sys.stdin if stdin is None else stdin
         stdout = sys.stdout if stdout is None else stdout
 
-        self.stdin = io.open(stdin.fileno(), "rb")
-        self.stdout = io.open(stdout.fileno(), "wb")
+        if initialize:
+            self.stdin = io.open(stdin.fileno(), "rb")
+            self.stdout = io.open(stdout.fileno(), "wb")
+        else:
+            self.stdin = stdin
+            self.stdout = stdout
 
         self._i = -1
         self._callbacks = {}
