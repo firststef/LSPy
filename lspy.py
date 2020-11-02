@@ -20,6 +20,7 @@ import json
 import io
 import time
 import threading
+import base64
 
 
 class Spec(object):
@@ -91,7 +92,7 @@ class Spec(object):
 
         if params is not None:
             try:
-                req += ",\"params\":%s" % json.dumps(params)
+                req += ",\"params\":%s" % json.dumps(params, cls=JsonBinaryEncoder)
             except Exception as e:
                 raise RPCParseError(str(e))
 
@@ -114,7 +115,7 @@ class Spec(object):
             id = '"%s"' % id
 
         try:
-            res = "{\"jsonrpc\":\"2.0\",\"id\":%s,\"result\":%s}" % (id, json.dumps(result))
+            res = "{\"jsonrpc\":\"2.0\",\"id\":%s,\"result\":%s}" % (id, json.dumps(result, cls=JsonBinaryEncoder))
         except Exception as e:
             raise RPCParseError(str(e))
 
@@ -142,7 +143,7 @@ class Spec(object):
 
         if data is not None:
             try:
-                err += ",\"data\":%s}" % json.dumps(data)
+                err += ",\"data\":%s}" % json.dumps(data, cls=JsonBinaryEncoder)
             except Exception as e:
                 raise RPCParseError(str(e))
         else:
@@ -291,7 +292,7 @@ class RPC(object):
                     result = self._results[id]
                     del self._results[id]
                     if isinstance(result, Exception):
-                        raise result
+                        raise Exception('ERROR when in ' + method + ' : ' + str(result))
                     else:
                         return result
                 time.sleep(self.block)
@@ -450,7 +451,7 @@ class MessageBuffer:
             # header.
             content_length = int(self.m_headers["Content-Length"])
             if len(self.m_raw_message) == content_length:
-                self.m_body = json.loads(self.m_raw_message)
+                self.m_body = json.loads(self.m_raw_message, cls=JsonBinaryDecoder)
                 
     def handle_string(self, s: str):
         self.m_raw_message += s
@@ -475,7 +476,7 @@ class MessageBuffer:
             # header.
             content_length = int(self.m_headers["Content-Length"])
             if len(self.m_raw_message) == content_length:
-                self.m_body = json.loads(self.m_raw_message)
+                self.m_body = json.loads(self.m_raw_message, cls=JsonBinaryDecoder)
 
     def clear(self):
         self.m_headers = {}
@@ -550,8 +551,13 @@ class Watchdog(threading.Thread):
         self._stop.set()
 
     def run(self):
+        try:
+            self._run()
+        except:
+            self.stop()
+
+    def _run(self):
         stream = self.rpc.stdin
-        buffer = []
 
         if stream.isatty():
             last_pos = 0
@@ -714,3 +720,33 @@ class RPCInternalError(RPCError):
 class RPCServerError(RPCError):
     code = (-32099, -32000)
     title = "Server error"
+
+
+class JsonBinaryEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, bytes):
+            return 'b64:' + base64.b64encode(obj).decode('utf-8')
+        return json.JSONEncoder.default(self, obj)
+
+
+class JsonBinaryDecoder(json.JSONDecoder):
+    def decode(self, s, _w=json.decoder.WHITESPACE.match):
+        obj = json.JSONDecoder.decode(self, s)
+        return self.replace_b64_in_obj(obj)
+
+    def replace_b64_in_obj(self, obj):
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                if isinstance(v, dict):
+                    obj[k] = self.replace_b64_in_obj(v)
+                if isinstance(v, str) and v.startswith('b64:'):
+                    obj[k] = self.replace_b64_str(v)
+                if isinstance(v, list):
+                    obj[k] = [(self.replace_b64_str(a) if isinstance(a, str) else a) for a in v]
+        elif isinstance(obj, list):
+            obj = [self.replace_b64_str(a) if isinstance(a, str) else a for a in obj]
+        return obj
+
+    def replace_b64_str(self, s):
+        return base64.b64decode(s[len('b64:'):])
+
