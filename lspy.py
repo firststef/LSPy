@@ -531,7 +531,7 @@ class Watchdog(threading.Thread):
         self.interval = interval
         self.daemon = daemon
 
-        self._stop = threading.Event()
+        self._do_stop = threading.Event()
 
         self._message_buffer = MessageBuffer()
 
@@ -548,7 +548,7 @@ class Watchdog(threading.Thread):
         """
         Stops with thread's activity.
         """
-        self._stop.set()
+        self._do_stop.set()
 
     def run(self):
         try:
@@ -561,7 +561,7 @@ class Watchdog(threading.Thread):
 
         if stream.isatty():
             last_pos = 0
-            while not self._stop.is_set():
+            while not self._do_stop.is_set():
                 cur_pos = stream.tell()
                 if cur_pos != last_pos:
                     stream.seek(last_pos)
@@ -578,9 +578,9 @@ class Watchdog(threading.Thread):
                         self.rpc._handle(self._message_buffer.get_body())
                         self._message_buffer.clear()
                 else:
-                    self._stop.wait(self.interval)
+                    self._do_stop.wait(self.interval)
         else:
-            while not self._stop.is_set():
+            while not self._do_stop.is_set():
                 c = stream.read(1).decode('utf-8')
                 self._message_buffer.handle_char(c)
                 if self._message_buffer.is_m_header_done():
@@ -592,7 +592,7 @@ class Watchdog(threading.Thread):
                     self.rpc._handle(self._message_buffer.get_body())
                     self._message_buffer.clear()
                 else:
-                    self._stop.wait(self.interval)
+                    self._do_stop.wait(self.interval)
 
 
 class RPCError(Exception):
