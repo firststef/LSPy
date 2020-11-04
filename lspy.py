@@ -22,6 +22,8 @@ import time
 import threading
 import base64
 
+ENABLE_LOGGING = False
+
 
 class Spec(object):
     """
@@ -332,6 +334,8 @@ class RPC(object):
                 res = Spec.response(req["id"], result)
                 self._write(res)
         except Exception as e:
+            if ENABLE_LOGGING:
+                print('WARN_FAILED_REQUEST:', e)
             if "id" in req:
                 if isinstance(e, RPCError):
                     err = Spec.error(req["id"], e.code, e.data)
@@ -737,14 +741,11 @@ class JsonBinaryDecoder(json.JSONDecoder):
     def replace_b64_in_obj(self, obj):
         if isinstance(obj, dict):
             for k, v in obj.items():
-                if isinstance(v, dict):
-                    obj[k] = self.replace_b64_in_obj(v)
-                if isinstance(v, str) and v.startswith('b64:'):
-                    obj[k] = self.replace_b64_str(v)
-                if isinstance(v, list):
-                    obj[k] = [(self.replace_b64_str(a) if isinstance(a, str) else a) for a in v]
+                obj[k] = self.replace_b64_in_obj(v)
         elif isinstance(obj, list):
-            obj = [self.replace_b64_str(a) if isinstance(a, str) else a for a in obj]
+            obj = [self.replace_b64_in_obj(a) for a in obj]
+        elif isinstance(obj, str) and obj.startswith('b64:'):
+            obj = self.replace_b64_str(obj)
         return obj
 
     def replace_b64_str(self, s):
